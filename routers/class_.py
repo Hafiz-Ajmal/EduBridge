@@ -18,7 +18,7 @@ def get_class(class_id:int,session:session_Dep,current_user:Annotated[UserDB,Dep
 
 @router.post("/add",response_model=ClassOut)
 def add_class(cls:ClassCreate,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin"]))]):
-    duplicate=session.exec(select(Class).where(Class.name==cls.name))
+    duplicate=session.exec(select(Class).where(Class.name==cls.name)).first()
     if duplicate:
         raise HTTPException(status_code=409,detail="Class name Already Exist")
     class_db=Class.model_validate(cls)

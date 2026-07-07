@@ -247,8 +247,8 @@ class Attendence(SQLModel,table=True):
     attendance_id: int | None = Field(default=None, primary_key=True)
     student_id:int=Field(foreign_key="student.user_id")
     date:date
-    marked_by_user_id:int =Field(foreign_key="userdb.id") #because superadmin is not employee , he can be take attendence
-     #teacher.user_id not used bcz any can mark attendence either teacher/admin/superadmin...
+    marked_by_user_id:int =Field(foreign_key="userdb.id") #because superadmin is not employee , he can be take attendence #should be optional o think else need for every single attendence to send it
+    #teacher.user_id not used bcz any can mark attendence either teacher/admin/superadmin...
     update_by_user_id:int|None=Field(default=None,foreign_key="userdb.id")
     status:str
     remarks:str |None=None
@@ -261,9 +261,11 @@ class AttendanceRecord(SQLModel):
     student_id:int
     status:str
     remarks:str|None=None
+    marked_by_user_id:int|None=None
+    date:date                   #bcz date is necessary in db model
 
 class AttendenceOut(AttendanceRecord):
-    attendence_id:int
+    attendance_id:int
 
 class AttendenceUpdate(SQLModel):
     #student_id no need to change so no need to add
@@ -360,7 +362,33 @@ class StudentExamUpdate(SQLModel):
 class StudentExamBulk(SQLModel):
     exam_id:int
     results:list[StudentExamCreate]
+#-------------------------------------------- For Custom Query Return
+class StudentSummaryOut(SQLModel):
+    total_exams: int
+    avg_marks: float | None
+    passed: int
+    failed: int
+
+class PassPercentageOut(SQLModel):
+    passed: int
+    failed: int
+    total: int
+    pass_percentage: float
+
+class StudentReportOut(SQLModel):
+    name:str
+    obtained_marks:int
+    total_marks:int
+    result:str
+    
 #-------------
+
+
+
+
+
+
+
 
 
     

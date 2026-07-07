@@ -6,14 +6,16 @@ from routers.auth import require_roles
 from sqlmodel import select
 from datetime import date,datetime,UTC
 from sqlalchemy.orm import selectinload
-from sqlalchemy import UniqueConstraint,func
+from sqlalchemy import UniqueConstraint,func,case
 from sqlalchemy.exc import IntegrityError
 #why student_id and roll_no both
+
+#Enum of present absent etc 
 
 router=APIRouter(prefix="/attendence",tags=["Attendence"])
 
 @router.post("/mark/{class_id}/{section_id}")
-def mark_attendence(class_id:int,section_id:int,attendence:AttendenceBulkCreate,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","Teacher"]))]):
+def mark_attendence(class_id:int,section_id:int,attendence:AttendenceBulkCreate,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","teacher"]))]):
     if attendence.date > date.today():
         raise HTTPException(status_code=404,detail="Future Date Not Allowed")
     
@@ -34,13 +36,14 @@ def mark_attendence(class_id:int,section_id:int,attendence:AttendenceBulkCreate,
     
     for record in attendence.records:
         if record.student_id not in student_IDS:
-             raise HTTPException(status_code=403,detail="Illegal Access!")
+             raise HTTPException(status_code=403,detail="Student does not belong to this section!")
         
         if  record.student_id  in existing:
             raise HTTPException(status_code=409,detail=f"Attendence Already Marks for id: {record.student_id} for this :{attendence.date} date")
         
-        
-           
+        record.marked_by_user_id=user_id
+
+
         attendence_db=Attendence.model_validate(record)
         attendence_db.date=attendence.date
         attendence_db.marked_by_user_id=user_id
@@ -56,23 +59,9 @@ def mark_attendence(class_id:int,section_id:int,attendence:AttendenceBulkCreate,
 
     return True    #why code is tructuraly unreachable
 
-@router.get("/{class_id}/{section_id}",response_model=list[AttendenceOut])
-def get_attendance_of_one_day(class_id:int,section_id:int,date:date,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","Teacher"]))]):
-    
-    class_=session.get(Class,class_id)
-    if not class_:
-        raise HTTPException(status_code=404,detail="Class Not Found")
-    
-    section=session.exec(select(Section).where(Section.class_id==class_id,Section.section_id==section_id)).first() #why section can be differ for each
-    if not section:
-         raise HTTPException(status_code=404,detail="Section Not Found")
-    
-    attendence=session.exec(select(Attendence).join(Student).where(Student.class_id==class_id,Student.section_id==section_id,Attendence.date==date)).all()
-
-    return attendence
 
 @router.put("/{attendence_id}",response_model=AttendenceOut)
-def update_attendence(attendence_id:int,attendence:AttendenceUpdate,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin"]))]):
+def update_attendence(attendence_id:int,attendence:AttendenceUpdate,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","teacher"]))]):
 
     attendence_db=session.get(Attendence,attendence_id)
     if not attendence_db:
@@ -89,31 +78,57 @@ def update_attendence(attendence_id:int,attendence:AttendenceUpdate,session:sess
     return attendence_final
 
 @router.get("/student/{student_id}",response_model=list[AttendenceOut])
-def get_attendence_history(student_id:int,start_date:date,end_date:date,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","Teacher"]))]):
+def get_attendence_history(student_id:int,start_date:date,end_date:date,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","teacher"]))]):
 
+    print("---------------------------------------------------history")
     student=session.get(Student,student_id)
     if not student:
         raise HTTPException(status_code=404,detail="Student Not Found")
     #in will not work between will work here
-    attendence_history=session.exec(select(Attendence).where(Attendence.student_id==student_id,Attendence.date.between(start_date,end_date))).all()
+    
+    attendence_history=session.exec(select(Attendence).where(Attendence.student_id==student_id,Attendence.date>=start_date,Attendence.date<=end_date)).all()
 
     return attendence_history
 
-@router.get("/student/{student_id}/summary",response_model=dict)
-def get_attendence_summary(student_id:int,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","Teacher"]))]):
+#----------------------------------------------------------#
+@router.get("/student/{student_id}/summary")
+def get_attendence_summary(student_id:int,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","teacher"]))]):
 
     student=session.get(Student,student_id)
     if not student:
         raise HTTPException(status_code=404,detail="Student Not Found")
+
+    attendence_summary=session.exec(select(func.sum(case((Attendence.status=="present",1),else_=0)).label("present"),
+                                         func.sum(case((Attendence.status=="absent",1),else_=0)).label("absent"),
+                                         func.sum(case((Attendence.status=="leave",1),else_=0)).label("leave")
+                                         ,func.count(Attendence.attendance_id).label("total")).where(Attendence.student_id==student_id).group_by(Attendence.status)).all()
     
-    attendce_summary=session.exec(select(Attendence.status,func.count(Attendence.attendance_id)).where(Attendence.student_id==student_id).group_by(Attendence.status)).all()
-    summary_dict=dict(attendce_summary)
-    total = sum(summary_dict.values())
-    summary_dict["percentage"] = (summary_dict.get("present", 0) / total) * 100
-    return summary_dict
+    return [{
+        "Present":row.present,
+        "Absent":row.absent,
+        "Leave":row.leave,
+        "percentage":row.present/row.total*100
+    }for row in attendence_summary]
+   
+
+#this overrides above 2
+@router.get("/{class_id}/{section_id}",response_model=list[AttendenceOut])
+def get_attendance_of_one_day(class_id:int,section_id:int,date:date,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","teacher"]))]):
+    
+    class_=session.get(Class,class_id)
+    if not class_:
+        raise HTTPException(status_code=404,detail="Class Not Found")
+    
+    section=session.exec(select(Section).where(Section.class_id==class_id,Section.section_id==section_id)).first() #why section can be differ for each
+    if not section:
+         raise HTTPException(status_code=404,detail="Section Not Found")
+    
+    attendence=session.exec(select(Attendence).where(Student.class_id==class_id,Student.section_id==section_id,Attendence.date==date).join(Student)).all()
+
+    return attendence
 
 @router.get("/report")
-def monthly_report_of_attendence(class_id:int,section_id:int,month:int,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","Teacher"]))]):
+def monthly_report_of_attendence(class_id:int,section_id:int,month:int,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","teacher"]))]):
 
     class_=session.get(Class,class_id)
     if not class_:
@@ -128,16 +143,28 @@ def monthly_report_of_attendence(class_id:int,section_id:int,month:int,session:s
     if month>current_month or month<1:
         raise HTTPException(status_code=404,detail="Month Not Correct")
     
-    attendenc_report=session.exec(select(Attendence.status,func.count(Attendence.attendance_id)).join(Student).where(Student.class_id==class_id,
-     
-                                                                         Student.section_id==section_id,func.extract("month", Attendence.date)==month,func.extract("year",Attendence.date)==date.today().year).group_by(Attendence.status,Student.user_id)).all()
-    return attendenc_report
+    attendenc_report=session.exec(select(func.sum(case((Attendence.status=="present",1),else_=0)).label("present"),func.sum(case((Attendence.status=="absent",1),else_=0)).label("absent"),
+                                         func.sum(case((Attendence.status=="leave",1),else_=0)).label("leave"),func.count(Attendence.attendance_id).label("total")).join(Student).where(Student.class_id==class_id,
+                                        Student.section_id==section_id,func.extract("month", Attendence.date)==month,func.extract("year",Attendence.date)==date.today().year).group_by(Student.user_id,Attendence.status)).all()
+    return [{
+        "Present":row.present,
+        "Absent":row.absent,
+        "Leave":row.leave,
+        "percentage":row.present/row.total*100
+    }for row in attendenc_report]
+   
     
 @router.get("/dashboard")
-def get_dashboard(session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","Teacher"]))]):
+def get_dashboard(session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin","teacher"]))]):
 
-    dashboard=session.exec(select(Attendence.status,func.count(Attendence.attendance_id)).where(Attendence.date==date.today()).group_by(Attendence.status)).all()
-    return dashboard
+    dashboard=session.exec(select(func.sum(case((Attendence.status=="present",1),else_=0)).label("present"),func.sum(case((Attendence.status=="absent",1),else_=0)).label("absent"),
+                                         func.sum(case((Attendence.status=="leave",1),else_=0)).label("leave"),func.count(Attendence.attendance_id).label("total")).where(Attendence.date==date.today()).join(Student).group_by(Student.class_id)).all()
+    return [{
+        "Present":row.present,
+        "Absent":row.absent,
+        "Leave":row.leave,
+        "percentage":row.present/row.total*100
+    }for row in dashboard]
 
 
 

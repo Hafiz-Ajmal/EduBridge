@@ -26,7 +26,7 @@ DUMMY_HASH=pwdContext.hash("DUMMY")
 def require_roles(roles: list[str]):
     def checker(current_user: UserDB = Depends(get_cuurent_user)):
         if current_user.role not in roles:
-            raise HTTPException(status_code=403, detail="Access Denied")
+            raise HTTPException(status_code=403, detail="Role Based Access Denied")
         return current_user
     return checker
 
