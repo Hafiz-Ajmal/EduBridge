@@ -15,6 +15,7 @@ router=APIRouter(prefix="/admin",tags=["admin"])
 
 @router.post("/register")
 def add_admin(teacher:TeacherRegister,session:session_Dep,user:Annotated[UserDB,Depends(require_roles(["super_admin"]))]):
+   
     if teacher.user.email:
         user=session.exec(select(UserDB).where(UserDB.email==teacher.user.email)|UserDB.username==teacher.user.username).first()
         if user:

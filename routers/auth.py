@@ -41,16 +41,14 @@ auth_2=OAuth2PasswordBearer(tokenUrl="/auth/token") #without tokenurl just path 
 #Depends(auth_2) send str not OuthPasswordBearer
 def get_cuurent_user(token:Annotated[str,Depends(auth_2)],session:session_Dep): #why not Outh2 used here oe can be used as well
     try:
-        print("-----------------------------------------")
+        
         payload=jwt.decode(token,SECRET_KEY,algorithms=ALGORITHM)
     except JWTError:
         raise HTTPException(status_code=402,detail="Decoding failed")
    
     user_id= payload["sub"]
-    print("-----------------------------------------")
     print(type(user_id))
     print(user_id)
-    print("------------------------")
     user=session.get(UserDB,user_id)
     if not user:
         raise HTTPException(status_code=402,detail="Username or password is incorrect")

@@ -89,6 +89,7 @@ class UserDB(UserBase, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 ##--------------------------------STUDENT------------------------------------------#
+#--------------------------------------WHY RELATION IN CREATE INSTEAD OF TABLE
 class StudentCreate(SQLModel):
     admission_no: str
     roll_no: int
@@ -129,6 +130,7 @@ class StudentRegister(SQLModel):
     student:StudentCreate
 
 #----------------------Teacher-----------------------#
+
 class TeacherBase(SQLModel):
    
     joining_date: date
@@ -169,9 +171,12 @@ class TeacherRegister(SQLModel):
     user:UserCreate
     teacher:TeacherCreate
 #----------------
+#--------------------------- UPDATED AT NOT ADDED YET -------------------------------------
+#-------------------------- NAME SHOULD BE UNIQUE -----------------------------------------
+
 class Class(SQLModel, table=True):
     class_id: int |None= Field(default=None,primary_key=True)
-    name: str
+    name: str    
     description: str
 
     teachers:list["Teacher"]=Relationship(back_populates="classes",link_model=TeacherClass)
@@ -261,14 +266,14 @@ class AttendanceRecord(SQLModel):
     student_id:int
     status:str
     remarks:str|None=None
-    marked_by_user_id:int|None=None
-    date:date                   #bcz date is necessary in db model
+   
+                                             
 
 class AttendenceOut(AttendanceRecord):
     attendance_id:int
 
 class AttendenceUpdate(SQLModel):
-    #student_id no need to change so no need to add
+    student_id:int 
     status:str |None=None
     remarks:str|None=None
 
@@ -276,6 +281,9 @@ class AttendenceBulkCreate(SQLModel):
     date:date
     records:list[AttendanceRecord]
 
+class AttendenceBulkUpdate(SQLModel):
+    date:date
+    records:list[AttendenceUpdate]
 #----------------------------
 class ExamCreate(SQLModel):
     name: str
@@ -292,7 +300,7 @@ class ExamCreate(SQLModel):
    
 
    
-
+#----------------------CREATED AT AND UPDATED AT
 class Exam(ExamCreate,table=True):
     exam_id:int|None=Field(default=None,primary_key=True)
     name: str
@@ -356,16 +364,16 @@ class StudentExamOut(SQLModel):
    
 
 class StudentExamUpdate(SQLModel):
+    student_id:int
     obtained_marks: float | None = None
     remarks: str | None = None
 
 class StudentExamBulk(SQLModel):
     exam_id:int
-    results:list[StudentExamCreate]
+    results:list[StudentExamUpdate]
 #-------------------------------------------- For Custom Query Return
 class StudentSummaryOut(SQLModel):
     total_exams: int
-    avg_marks: float | None
     passed: int
     failed: int
 
