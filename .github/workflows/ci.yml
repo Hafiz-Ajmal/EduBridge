@@ -1,0 +1,39 @@
+
+name: Backend-CI
+
+on:
+  push:
+
+jobs:
+  backend-integration:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: checkout 
+        uses: actions/checkout@v4
+
+      - name: install-python
+        uses: actions/setup-python@v5
+        with:
+            python-version: "3.14.5"
+
+      - name: install dependencies
+        run: pip install -r requirements.txt
+    
+
+      - name: build image
+        run: docker  build -t edubridge .
+
+      - name: run docker
+        run: docker compose up -d
+      
+
+
+
+
+
+
+
+
+  

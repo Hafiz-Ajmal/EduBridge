@@ -49,3 +49,7 @@ app.include_router(teacher_subject.router)
 @app.get("/")
 def root():
     return {"message": "School Management API Running"}
+
+@app.get("/health")
+def health():
+    return {"status":"Healthy"}

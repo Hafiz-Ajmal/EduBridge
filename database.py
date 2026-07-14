@@ -5,8 +5,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+print("--------------------------------------------------DB URL PRINT--------------------------------------------------------------------")
+print(os.getenv("DATABASE_URL"))
+
 DB_URL=os.getenv("DATABASE_URL")
 engine=create_engine(DB_URL)
+
+
 
 #print( SQLModel.metadata.tables)
 
