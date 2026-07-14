@@ -27,6 +27,10 @@ jobs:
 
       - name: run docker
         run: docker compose up -d
+
+      - name: Show Docker Logs
+        if: always()
+        run: docker compose logs postgres
       
 
 
