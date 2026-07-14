@@ -26,6 +26,12 @@ jobs:
         run: docker  build -t edubridge .
 
       - name: run docker
+        env:
+           
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          
         run: docker compose up -d
 
       - name: Show Docker Logs
