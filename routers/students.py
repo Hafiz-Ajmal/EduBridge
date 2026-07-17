@@ -1,10 +1,10 @@
 
 from fastapi import APIRouter,HTTPException,Depends
-from models import StudentCreate,Student,UserDB,StudentOut,StudentUpdate,StudentRegister,Section,Attendence,StudentExam
+from models import Student,UserDB,StudentOut,StudentUpdate,StudentRegister,Section,Attendence,StudentExam
 from dependencies import session_Dep
 from sqlmodel import select
 from typing import Annotated
-from routers.auth import get_cuurent_user,require_roles,hash_password
+from routers.auth import require_roles,hash_password
 from datetime import datetime,UTC
 
 
@@ -17,7 +17,7 @@ router=APIRouter(prefix="/student",tags=["student"])
 #capacity full or not?..........If user already exist
 @router.post("/register",response_model=StudentOut)
 def add_student(data:StudentRegister,session:session_Dep,current_user:Annotated[UserDB,Depends(require_roles(["admin", "super_admin"]))]):
-    
+    print("-----------------------------------------------------")
     st=session.exec(select(Student).where(Student.roll_no==data.student.roll_no)).first() #what if not used first
     if st:
         raise HTTPException(status_code=402,detail="Student Already Exist")

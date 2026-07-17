@@ -4,8 +4,8 @@ from models import UserDB,TeacherClass,TeacherClassCreate,TeacherClassOut,Teache
 from dependencies import session_Dep
 from sqlmodel import select
 from typing import Annotated
-from routers.auth import get_cuurent_user,require_roles,hash_password
-from datetime import datetime,UTC
+from routers.auth import require_roles
+
 
 
 #WHY NOT USER_ID USED FOR CHANGING OR RETEREIVING DATA FROM DB

@@ -1,5 +1,5 @@
 from fastapi import APIRouter,Depends,HTTPException
-from models import Subject,SubjectCreate,SubjectOut,SubjectUpdate,UserDB,Class,TeacherSubject
+from models import Subject,SubjectCreate,SubjectOut,SubjectUpdate,UserDB,TeacherSubject
 from dependencies import session_Dep
 from routers.auth import require_roles
 from typing import Annotated

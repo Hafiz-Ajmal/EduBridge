@@ -102,11 +102,11 @@ def get_class_exam(class_id:int,session:session_Dep,user:Annotated[UserDB,Depend
 
     class_=session.get(Class,class_id)
     if not class_:
-        raise HTTPException(status_code=404,detail=f"Class Not found")
+        raise HTTPException(status_code=404,detail="Class Not found")
     
     exam=session.exec(select(Exam).where(Exam.class_id==class_id)).all()
     if not exam:
-        raise HTTPException(status_code=404,detail=f"Exam for this class Not found")
+        raise HTTPException(status_code=404,detail="Exam for this class Not found")
 
     return exam
 
@@ -133,7 +133,7 @@ def get_all_exam_from_subject(subject_id:int,session:session_Dep,user:Annotated[
     
     subject=session.get(Subject,subject_id)
     if not subject:
-        raise HTTPException(status_code=404,detail=f"Subject Not found")
+        raise HTTPException(status_code=404,detail="Subject Not found")
     
     exams=session.exec(select((Exam)).where(Exam.subject_id==subject_id)).all()
     if not exams:

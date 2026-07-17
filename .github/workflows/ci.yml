@@ -13,17 +13,25 @@ jobs:
       - name: checkout 
         uses: actions/checkout@v4
 
-      - name: install-python
-        uses: actions/setup-python@v5
-        with:
-            python-version: "3.14.5"
+      # - name: install-python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #       python-version: "3.14.5"
+      #       cache: "pip"
 
-      - name: install dependencies
-        run: pip install -r requirements.txt
-    
+      # - name: install dependencies
+      #   run: pip install -r requirements.txt
+
+     
+
+     
+
+       
+      
 
       - name: build image
         run: docker  build -t edubridge .
+      
 
       - name: run docker
         env:
@@ -31,8 +39,37 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          
+
         run: docker compose up -d
+        
+      - name: Run Ruff
+        run: docker compose exec -T app ruff check .
+
+      - name: Run-Tests
+        run: |
+          docker compose exec -T app \
+          pytest \
+          --cov=. \
+          --cov-report=html \
+          --cov-report=xml \
+          --junitxml=report.xml
+
+      - name: Copy-reports
+        if: always()
+        run: |
+          docker compose cp app:/app/report.xml ./report.xml
+          docker compose cp app:/app/coverage.xml ./coverage.xml
+          docker compose cp app:/app/htmlcov ./htmlcov
+
+      - name: upload-test-files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: |
+            report.xml
+            coverage.xml
+            htmlcov/
 
       - name: Show Docker Logs
         if: always()

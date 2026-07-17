@@ -15,7 +15,7 @@ from routers import (
     teacher_class,
     teacher_section,
     teacher_subject,
-    admin,
+    
 
 )
 
@@ -53,3 +53,8 @@ def root():
 @app.get("/health")
 def health():
     return {"status":"Healthy"}
+
+@app.post("/demo")
+def demo(demo:str):
+    print(demo)
+    return demo

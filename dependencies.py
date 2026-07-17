@@ -5,9 +5,9 @@ from typing import Annotated
 from fastapi import Depends
 
 
-def get_db():
+def get_session():
     with Session(engine) as session:
         yield session
 
-session_Dep=Annotated[Session,Depends(get_db)]    
+session_Dep=Annotated[Session,Depends(get_session)]    
    

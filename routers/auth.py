@@ -8,7 +8,7 @@ from fastapi import Depends
 from typing import Annotated
 from sqlmodel import Session,select
 from fastapi import HTTPException
-from datetime import timedelta,timezone,datetime,UTC
+from datetime import timedelta,datetime,UTC
 from jose import jwt,JWTError
 
 #which peace of code is cause of lock icon
@@ -24,7 +24,7 @@ DUMMY_HASH=pwdContext.hash("DUMMY")
 
 
 def require_roles(roles: list[str]):
-    def checker(current_user: UserDB = Depends(get_cuurent_user)):
+    def checker(current_user: UserDB = Depends(get_current_user)):
         if current_user.role not in roles:
             raise HTTPException(status_code=403, detail="Role Based Access Denied")
         return current_user
@@ -39,7 +39,7 @@ def verify_password(password:str,hashed_password:str):
 auth_2=OAuth2PasswordBearer(tokenUrl="/auth/token") #without tokenurl just path then ?
 
 #Depends(auth_2) send str not OuthPasswordBearer
-def get_cuurent_user(token:Annotated[str,Depends(auth_2)],session:session_Dep): #why not Outh2 used here oe can be used as well
+def get_current_user(token:Annotated[str,Depends(auth_2)],session:session_Dep): #why not Outh2 used here oe can be used as well
     try:
         
         payload=jwt.decode(token,SECRET_KEY,algorithms=ALGORITHM)
@@ -54,8 +54,8 @@ def get_cuurent_user(token:Annotated[str,Depends(auth_2)],session:session_Dep): 
         raise HTTPException(status_code=402,detail="Username or password is incorrect")
     return user
 
-def get_current_and_active_user(current_user:Annotated[UserDB,Depends(get_cuurent_user)],session:session_Dep):
-    if session.is_active==True:
+def get_current_and_active_user(current_user:Annotated[UserDB,Depends(get_current_user)],session:session_Dep):
+    if session.is_active:
         return current_user
     raise HTTPException(status_code=402,detail="session failed")
 

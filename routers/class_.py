@@ -68,7 +68,7 @@ def delete_class(class_id:int,session:session_Dep,current_user:Annotated[UserDB,
             session.delete(teacherclass)
         
 
-    studentExam=session.exec(Select())
+    
     session.delete(cls)
     session.commit()
     return cls 

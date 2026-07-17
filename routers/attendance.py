@@ -1,12 +1,11 @@
 from fastapi import APIRouter,Depends,HTTPException
 from dependencies import session_Dep
 from typing import Annotated
-from models import UserDB,Attendence,AttendenceOut,AttendenceUpdate,Class,Student,Teacher,AttendenceBulkCreate,Section,AttendenceBulkUpdate,TeacherClass,TeacherSection
+from models import UserDB,Attendence,AttendenceOut,Class,Student,Teacher,AttendenceBulkCreate,Section,AttendenceBulkUpdate,TeacherClass,TeacherSection
 from routers.auth import require_roles
 from sqlmodel import select
 from datetime import date,datetime,UTC
-from sqlalchemy.orm import selectinload
-from sqlalchemy import UniqueConstraint,func,case
+from sqlalchemy import func,case
 from sqlalchemy.exc import IntegrityError
 #why student_id and roll_no both
 
@@ -307,20 +306,20 @@ def get_dashboard(session:session_Dep,current_user:Annotated[UserDB,Depends(requ
 
 
     
-    #student exist?
-    student=session.get(Student,attendence.student_id) 
-    if not student:
-        raise HTTPException(status_code=404,detail="Student Not Found")
+    # #student exist?
+    # student=session.get(Student,attendence.student_id) 
+    # if not student:
+    #     raise HTTPException(status_code=404,detail="Student Not Found")
     
    
-    attendence_dup=session.exec(select(Attendence).where(Attendence.student_id==attendence.student_id,Attendence.date==attendence.date)).first()
-    if attendence_dup:
-        raise HTTPException(status_code=402,detail="Attendence Already Marks")
-    if attendence > date.today():
-        raise HTTPException(status_code=402,detail="Date is not Come yet")
-    attendence_db=Attendence.model_validate(attendence)
-    session.add(attendence_db)
-    session.commit()
-    session.refresh(attendence_db)
+    # attendence_dup=session.exec(select(Attendence).where(Attendence.student_id==attendence.student_id,Attendence.date==attendence.date)).first()
+    # if attendence_dup:
+    #     raise HTTPException(status_code=402,detail="Attendence Already Marks")
+    # if attendence > date.today():
+    #     raise HTTPException(status_code=402,detail="Date is not Come yet")
+    # attendence_db=Attendence.model_validate(attendence)
+    # session.add(attendence_db)
+    # session.commit()
+    # session.refresh(attendence_db)
 
     

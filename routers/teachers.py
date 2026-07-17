@@ -1,8 +1,8 @@
 
 from fastapi import APIRouter,Depends,HTTPException
 from dependencies import session_Dep
-from routers.auth import require_roles,get_cuurent_user,hash_password
-from models import UserDB,TeacherBase,TeacherCreate,Teacher,TeacherOut,TeacherUpdate,TeacherRegister
+from routers.auth import require_roles,hash_password
+from models import UserDB,Teacher,TeacherOut,TeacherUpdate,TeacherRegister
 from typing import Annotated
 from sqlmodel import select
 from datetime import datetime,UTC

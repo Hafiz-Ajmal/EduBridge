@@ -1,6 +1,6 @@
 from fastapi import APIRouter,Depends,HTTPException
 from dependencies import session_Dep
-from models import UserDB,StudentExamOut,StudentExam,StudentExamCreate,StudentExamUpdate,Exam,Student,Class,Section,Subject,StudentExamBulk,StudentSummaryOut,PassPercentageOut,StudentReportOut
+from models import UserDB,StudentExam,Exam,Student,Class,Section,Subject,StudentExamBulk,StudentSummaryOut,PassPercentageOut,StudentReportOut
 from typing import Annotated
 from routers.auth import require_roles
 from sqlalchemy import func,case

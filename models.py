@@ -1,4 +1,4 @@
-from datetime import datetime,UTC,timedelta,date
+from datetime import datetime,UTC,date
 from pydantic import EmailStr
 from sqlmodel import SQLModel, Field,Relationship
 from sqlalchemy import UniqueConstraint
@@ -112,7 +112,7 @@ class Student(StudentCreate, table=True):
         foreign_key="userdb.id"
     )
     attendences:list["Attendence"]=Relationship(back_populates="student")
-    class_:Class=Relationship(back_populates="students")
+    class_:"Class"=Relationship(back_populates="students")
 
 class StudentUpdate(SQLModel):
     class_id: int |None=None
