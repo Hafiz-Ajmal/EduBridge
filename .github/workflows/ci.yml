@@ -8,6 +8,13 @@ jobs:
   backend-integration:
     runs-on: ubuntu-latest
 
+    #at job level so no problem for ruff/copy/pytest etc 
+    env:
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
     steps:
 
       - name: checkout 
