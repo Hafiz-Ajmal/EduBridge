@@ -3,9 +3,9 @@ services:
 
   app:
 
-    
-    volumes:
-      - .:/app
+    #best for local dev not for production or CI
+    # volumes:
+    #   - .:/app
 
     build: .
     image: edubridge
