@@ -43,7 +43,7 @@ jobs:
         run: docker compose up -d
         
       - name: Run Ruff
-        run: run: docker compose exec -T app ruff check . --no-cache  # for write cache root permission required 
+        run:  docker compose exec -T app ruff check . --no-cache  # for write cache permission required 
 
       - name: Run-Tests
         run: |
