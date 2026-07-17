@@ -48,6 +48,7 @@ services:
     
     volumes: 
       - postgres-data:/var/lib/postgresql/data
+      - ./init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql  # to create test db bcz just on db is created auto by postgres 
 
     networks:
       - edubridge
